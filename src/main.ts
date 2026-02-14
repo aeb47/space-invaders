@@ -1,6 +1,7 @@
 import * as ex from 'excalibur';
 import { CONFIG } from './config';
 import { GameScene } from './scenes/game';
+import { loader } from './resources';
 
 const game = new ex.Engine({
   width: CONFIG.canvas.width,
@@ -9,5 +10,6 @@ const game = new ex.Engine({
 });
 
 game.add('game', new GameScene());
-game.goToScene('game');
-game.start();
+game.start(loader).then(() => {
+  game.goToScene('game');
+});

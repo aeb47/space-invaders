@@ -1,6 +1,7 @@
 import * as ex from 'excalibur';
 import { PlayerBulletCollisionGroup, AlienBulletCollisionGroup } from '../collision-groups';
 import { CONFIG } from '../config';
+import { getSpriteSheet, SpriteIndex } from '../resources';
 
 export type BulletOwner = 'player' | 'alien';
 
@@ -11,14 +12,19 @@ export class Bullet extends ex.Actor {
     const isPlayer = owner === 'player';
     super({
       pos: pos.clone(),
-      width: 3,
-      height: 10,
-      color: isPlayer ? ex.Color.White : ex.Color.Yellow,
+      width: 24,
+      height: 16,
       collisionType: ex.CollisionType.Active,
       collisionGroup: isPlayer ? PlayerBulletCollisionGroup : AlienBulletCollisionGroup,
       vel: ex.vec(0, isPlayer ? -CONFIG.player.bulletSpeed : CONFIG.alien.bulletSpeed),
     });
     this.owner = owner;
+  }
+
+  onInitialize(): void {
+    const idx = this.owner === 'player' ? SpriteIndex.playerBullet : SpriteIndex.alienBullet;
+    const sprite = getSpriteSheet().getSprite(idx % 8, Math.floor(idx / 8));
+    if (sprite) this.graphics.use(sprite);
   }
 
   onPreUpdate(_engine: ex.Engine, _delta: number): void {

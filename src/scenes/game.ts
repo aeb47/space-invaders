@@ -4,6 +4,7 @@ import { AlienGrid } from '../actors/alien-grid';
 import { Alien } from '../actors/alien';
 import { Bullet } from '../actors/bullet';
 import { CONFIG } from '../config';
+import { getSpriteSheet, SpriteIndex } from '../resources';
 
 export class GameScene extends ex.Scene {
   private player!: Player;
@@ -83,6 +84,7 @@ export class GameScene extends ex.Scene {
         const other = evt.other;
         if (other instanceof Bullet && other.owner === 'player') {
           other.kill();
+          this.spawnExplosion(alien.pos.clone());
           alien.kill();
           this.score += alien.points;
           this.scoreLabel.text = `SCORE: ${this.score}`;
@@ -145,6 +147,22 @@ export class GameScene extends ex.Scene {
           this.spawnWave();
         },
         interval: CONFIG.wave.clearPause,
+        repeats: false,
+      });
+      this.add(timer);
+      timer.start();
+    }
+  }
+
+  private spawnExplosion(pos: ex.Vector): void {
+    const explosion = new ex.Actor({ pos, width: 24, height: 16 });
+    const sprite = getSpriteSheet().getSprite(SpriteIndex.explosion % 8, Math.floor(SpriteIndex.explosion / 8));
+    if (sprite) {
+      this.add(explosion);
+      explosion.graphics.use(sprite);
+      const timer = new ex.Timer({
+        fcn: () => explosion.kill(),
+        interval: 200,
         repeats: false,
       });
       this.add(timer);

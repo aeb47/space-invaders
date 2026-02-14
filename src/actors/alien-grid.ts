@@ -73,6 +73,9 @@ export class AlienGrid {
     const alive = this.aliens.filter(a => !a.isKilled());
     if (alive.length === 0) return;
 
+    // Toggle animation frame on each step
+    alive.forEach(a => a.toggleFrame());
+
     // Check if any alien is at the edge
     const atEdge = alive.some(a => {
       const nextX = a.pos.x + this.direction * CONFIG.alien.stepSize;

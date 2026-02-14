@@ -1,6 +1,7 @@
 import * as ex from 'excalibur';
 import { CONFIG } from '../config';
 import { PlayerCollisionGroup } from '../collision-groups';
+import { getSpriteSheet, SpriteIndex } from '../resources';
 import { Bullet } from './bullet';
 
 export class Player extends ex.Actor {
@@ -9,12 +10,16 @@ export class Player extends ex.Actor {
   constructor() {
     super({
       pos: ex.vec(CONFIG.canvas.width / 2, CONFIG.player.yPosition),
-      width: 30,
+      width: 24,
       height: 16,
-      color: ex.Color.fromHex('#00ffcc'),
       collisionType: ex.CollisionType.Passive,
       collisionGroup: PlayerCollisionGroup,
     });
+  }
+
+  onInitialize(): void {
+    const sprite = getSpriteSheet().getSprite(SpriteIndex.player % 8, Math.floor(SpriteIndex.player / 8));
+    if (sprite) this.graphics.use(sprite);
   }
 
   onPreUpdate(engine: ex.Engine, delta: number): void {
