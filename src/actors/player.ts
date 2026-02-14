@@ -7,6 +7,7 @@ import { Bullet } from './bullet';
 export class Player extends ex.Actor {
   private activeBullets: Bullet[] = [];
   private fireCooldownTimer: number = 0;
+  private pointerHandler: (() => void) | null = null;
 
   constructor() {
     super({
@@ -54,10 +55,21 @@ export class Player extends ex.Actor {
     const sprite = getSpriteSheet().getSprite(SpriteIndex.player % 8, Math.floor(SpriteIndex.player / 8));
     if (sprite) this.graphics.use(sprite);
 
-    // Touch/click fires
-    engine.input.pointers.on('down', () => {
-      this.fire(engine);
-    });
+    // Touch/click fires — store handler so we can remove it on kill
+    this.pointerHandler = () => {
+      if (!this.isKilled()) {
+        this.fire(engine);
+      }
+    };
+    engine.input.pointers.on('down', this.pointerHandler);
+  }
+
+  onPreKill(): void {
+    // Clean up pointer handler to prevent accumulation across restarts
+    if (this.pointerHandler && this.scene?.engine) {
+      this.scene.engine.input.pointers.off('down', this.pointerHandler);
+      this.pointerHandler = null;
+    }
   }
 
   fire(engine: ex.Engine): void {

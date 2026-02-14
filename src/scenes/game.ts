@@ -14,6 +14,7 @@ export class GameScene extends ex.Scene {
   private wave: number = 1;
   private fireInterval: number = CONFIG.alien.fireInterval;
   private gameOver: boolean = false;
+  private invincible: boolean = false;
   private scoreLabel!: ex.Label;
   private livesLabel!: ex.Label;
   private waveLabel!: ex.Label;
@@ -72,6 +73,7 @@ export class GameScene extends ex.Scene {
   private spawnPlayer(engine: ex.Engine): void {
     this.player = new Player();
     this.add(this.player);
+    this.wirePlayerCollision();
   }
 
   private spawnWave(): void {
@@ -113,13 +115,14 @@ export class GameScene extends ex.Scene {
     }
   }
 
-  onActivate(): void {
-    // Wire player death collision
+  private wirePlayerCollision(): void {
     this.player.on('collisionstart', (evt: ex.CollisionStartEvent) => {
       const otherActor = evt.other.owner;
       if (otherActor instanceof Bullet && otherActor.owner === 'alien') {
         otherActor.kill();
-        this.playerHit();
+        if (!this.invincible) {
+          this.playerHit();
+        }
       }
     });
   }
@@ -131,8 +134,16 @@ export class GameScene extends ex.Scene {
     if (this.lives <= 0) {
       this.triggerGameOver();
     } else {
-      // Brief invincibility flash
+      // Invincibility frames: ignore collisions during blink
+      this.invincible = true;
       this.player.actions.blink(100, 100, Math.floor(CONFIG.player.invincibilityTime / 200));
+      const timer = new ex.Timer({
+        fcn: () => { this.invincible = false; },
+        interval: CONFIG.player.invincibilityTime,
+        repeats: false,
+      });
+      this.add(timer);
+      timer.start();
     }
   }
 
@@ -187,6 +198,7 @@ export class GameScene extends ex.Scene {
     this.wave = 1;
     this.fireInterval = CONFIG.alien.fireInterval;
     this.gameOver = false;
+    this.invincible = false;
     this.scoreLabel.text = 'SCORE: 0';
     this.livesLabel.text = `LIVES: ${this.lives}`;
     this.waveLabel.text = 'WAVE 1';
