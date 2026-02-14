@@ -1,6 +1,7 @@
 import * as ex from 'excalibur';
 import { CONFIG } from './config';
 import { GameScene } from './scenes/game';
+import { TitleScene } from './scenes/title';
 import { loader } from './resources';
 
 const game = new ex.Engine({
@@ -10,7 +11,8 @@ const game = new ex.Engine({
   backgroundColor: ex.Color.fromHex('#0a0a2a'),
 });
 
+game.add('title', new TitleScene());
 game.add('game', new GameScene());
 game.start(loader).then(() => {
-  game.goToScene('game');
+  game.goToScene('title');
 });

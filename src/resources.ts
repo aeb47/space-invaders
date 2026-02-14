@@ -6,7 +6,17 @@ export const Resources = {
   spritesheetImage,
 };
 
-export const loader = new ex.Loader([spritesheetImage]);
+class SilentLoader extends ex.DefaultLoader {
+  override onDraw(_ctx: CanvasRenderingContext2D): void {
+    // Draw nothing — skip the Excalibur splash screen
+  }
+  override async onUserAction(): Promise<void> {
+    // Resolve immediately — our title screen handles audio unlock
+  }
+}
+
+export const loader = new SilentLoader()
+loader.addResource(spritesheetImage);
 
 // Sprite sheet layout: 8 cols x 2 rows, each cell 24x16
 // Row 0: player, squid-f1, squid-f2, crab-f1, crab-f2, octopus-f1, octopus-f2, explosion

@@ -21,7 +21,7 @@ export const CONFIG = {
     bulletSpeed: 150,
     maxBullets: 3,
     fireInterval: 1500,
-    fireIntervalDecrease: 100,
+    fireIntervalDecrease: 50,
     minFireInterval: 400,
     startY: 100,
     waveYOffset: 16,
@@ -34,6 +34,14 @@ export const CONFIG = {
   } as Record<string, number>,
   touch: {
     zoneDivider: 560,
+  },
+  shield: {
+    count: 3,
+    yPosition: 500,
+    blockSize: 3,
+    startWave: 3,
+    xMargin: 40,
+    minSpacing: 80,
   },
   wave: {
     clearPause: 1500,
