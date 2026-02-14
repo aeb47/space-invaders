@@ -2,6 +2,7 @@ import * as ex from 'excalibur';
 import { Alien, AlienType } from './alien';
 import { Bullet } from './bullet';
 import { CONFIG } from '../config';
+import { audio } from '../audio';
 
 const ROW_TYPES: AlienType[] = ['squid', 'crab', 'crab', 'octopus', 'octopus'];
 
@@ -72,6 +73,8 @@ export class AlienGrid {
   private step(): void {
     const alive = this.aliens.filter(a => !a.isKilled());
     if (alive.length === 0) return;
+
+    audio.alienStep();
 
     // Toggle animation frame on each step
     alive.forEach(a => a.toggleFrame());
