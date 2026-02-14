@@ -32,6 +32,9 @@ export const CONFIG = {
     crab: 20,
     octopus: 10,
   } as Record<string, number>,
+  touch: {
+    zoneDivider: 560,
+  },
   wave: {
     clearPause: 1500,
   },

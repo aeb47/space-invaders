@@ -5,6 +5,7 @@ import { Alien } from '../actors/alien';
 import { Bullet } from '../actors/bullet';
 import { CONFIG } from '../config';
 import { getSpriteSheet, SpriteIndex } from '../resources';
+import { audio } from '../audio';
 
 export class GameScene extends ex.Scene {
   private player!: Player;
@@ -14,6 +15,7 @@ export class GameScene extends ex.Scene {
   private wave: number = 1;
   private fireInterval: number = CONFIG.alien.fireInterval;
   private gameOver: boolean = false;
+  private invincible: boolean = false;
   private scoreLabel!: ex.Label;
   private livesLabel!: ex.Label;
   private waveLabel!: ex.Label;
@@ -23,6 +25,14 @@ export class GameScene extends ex.Scene {
     this.setupHUD();
     this.spawnPlayer(engine);
     this.spawnWave();
+
+    // Resume audio on first user interaction (browser autoplay policy)
+    const resumeAudio = () => {
+      audio.resume();
+      engine.input.pointers.off('down', resumeAudio);
+    };
+    engine.input.pointers.on('down', resumeAudio);
+    engine.input.keyboard.on('press', () => audio.resume());
   }
 
   private setupHUD(): void {
@@ -72,6 +82,7 @@ export class GameScene extends ex.Scene {
   private spawnPlayer(engine: ex.Engine): void {
     this.player = new Player();
     this.add(this.player);
+    this.wirePlayerCollision();
   }
 
   private spawnWave(): void {
@@ -86,8 +97,12 @@ export class GameScene extends ex.Scene {
           other.kill();
           this.spawnExplosion(alien.pos.clone());
           alien.kill();
+          audio.alienExplode();
           this.score += alien.points;
           this.scoreLabel.text = `SCORE: ${this.score}`;
+          // Small screen shake + hit pause on alien kill
+          this.camera.shake(2, 2, 100);
+          this.hitPause(30);
           this.checkWaveClear();
         }
       });
@@ -113,13 +128,14 @@ export class GameScene extends ex.Scene {
     }
   }
 
-  onActivate(): void {
-    // Wire player death collision
+  private wirePlayerCollision(): void {
     this.player.on('collisionstart', (evt: ex.CollisionStartEvent) => {
       const otherActor = evt.other.owner;
       if (otherActor instanceof Bullet && otherActor.owner === 'alien') {
         otherActor.kill();
-        this.playerHit();
+        if (!this.invincible) {
+          this.playerHit();
+        }
       }
     });
   }
@@ -129,15 +145,36 @@ export class GameScene extends ex.Scene {
     this.livesLabel.text = `LIVES: ${this.lives}`;
 
     if (this.lives <= 0) {
+      audio.playerDeath();
       this.triggerGameOver();
     } else {
-      // Brief invincibility flash
+      audio.playerHit();
+      // Medium screen shake + hit pause
+      this.camera.shake(4, 4, 200);
+      this.hitPause(60);
+      // Invincibility frames: ignore collisions during blink
+      this.invincible = true;
       this.player.actions.blink(100, 100, Math.floor(CONFIG.player.invincibilityTime / 200));
+      const timer = new ex.Timer({
+        fcn: () => { this.invincible = false; },
+        interval: CONFIG.player.invincibilityTime,
+        repeats: false,
+      });
+      this.add(timer);
+      timer.start();
     }
+  }
+
+  private hitPause(durationMs: number): void {
+    this.engine.timescale = 0.05;
+    setTimeout(() => {
+      this.engine.timescale = 1.0;
+    }, durationMs);
   }
 
   private checkWaveClear(): void {
     if (this.alienGrid.allDead) {
+      audio.waveClear();
       this.wave++;
       this.waveLabel.text = `WAVE ${this.wave}`;
       this.fireInterval = Math.max(
@@ -164,9 +201,12 @@ export class GameScene extends ex.Scene {
     if (sprite) {
       this.add(explosion);
       explosion.graphics.use(sprite);
+      // Scale up and fade out for juicy explosion feel
+      explosion.actions.scaleTo(ex.vec(2.5, 2.5), ex.vec(8, 8));
+      explosion.actions.fade(0, 300);
       const timer = new ex.Timer({
         fcn: () => explosion.kill(),
-        interval: 200,
+        interval: 300,
         repeats: false,
       });
       this.add(timer);
@@ -176,6 +216,9 @@ export class GameScene extends ex.Scene {
 
   private triggerGameOver(): void {
     this.gameOver = true;
+    // Player death explosion + large shake
+    this.spawnExplosion(this.player.pos.clone());
+    this.camera.shake(6, 6, 300);
     this.player.kill();
     this.alienGrid.destroy();
     this.gameOverLabel.text = `GAME OVER\nSCORE: ${this.score}\n\nPress ENTER or TAP to restart`;
@@ -187,6 +230,7 @@ export class GameScene extends ex.Scene {
     this.wave = 1;
     this.fireInterval = CONFIG.alien.fireInterval;
     this.gameOver = false;
+    this.invincible = false;
     this.scoreLabel.text = 'SCORE: 0';
     this.livesLabel.text = `LIVES: ${this.lives}`;
     this.waveLabel.text = 'WAVE 1';
