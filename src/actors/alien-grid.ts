@@ -46,8 +46,9 @@ export class AlienGrid {
   private getStepInterval(): number {
     const alive = this.aliveCount;
     const total = CONFIG.alien.gridRows * CONFIG.alien.gridCols;
-    // Linear interpolation: 55 alive = 1000ms, 1 alive = 50ms
-    return 50 + (950 * alive) / total;
+    // Exponential curve: stays slow longer, gets dramatic only with few aliens left
+    const ratio = alive / total;
+    return 80 + 920 * ratio * ratio;
   }
 
   update(delta: number, fireInterval: number): void {
