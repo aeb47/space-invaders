@@ -6,6 +6,7 @@ import { loader } from './resources';
 const game = new ex.Engine({
   width: CONFIG.canvas.width,
   height: CONFIG.canvas.height,
+  displayMode: ex.DisplayMode.FitScreen,
   backgroundColor: ex.Color.fromHex('#0a0a2a'),
 });
 
