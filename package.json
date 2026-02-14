@@ -1,0 +1,38 @@
+{
+  "name": "space-invaders",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && npx tsc --project tsconfig.server.json",
+    "preview": "vite preview",
+    "start": "node dist/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aeb47/space-invaders.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/aeb47/space-invaders/issues"
+  },
+  "homepage": "https://github.com/aeb47/space-invaders#readme",
+  "dependencies": {
+    "excalibur": "^0.32.0",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "canvas": "^3.2.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}
