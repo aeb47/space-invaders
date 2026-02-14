@@ -99,6 +99,9 @@ export class GameScene extends ex.Scene {
       if (engine.input.keyboard.wasPressed(ex.Keys.Enter)) {
         this.restart(engine);
       }
+      if (engine.input.pointers.isDragStart(0)) {
+        this.restart(engine);
+      }
       return;
     }
 
@@ -175,7 +178,7 @@ export class GameScene extends ex.Scene {
     this.gameOver = true;
     this.player.kill();
     this.alienGrid.destroy();
-    this.gameOverLabel.text = `GAME OVER\nSCORE: ${this.score}\n\nPress ENTER to restart`;
+    this.gameOverLabel.text = `GAME OVER\nSCORE: ${this.score}\n\nPress ENTER or TAP to restart`;
   }
 
   private restart(engine: ex.Engine): void {

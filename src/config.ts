@@ -10,6 +10,8 @@ export const CONFIG = {
     respawnTime: 1000,
     invincibilityTime: 2000,
     yPosition: 600,
+    maxBullets: 3,
+    fireCooldown: 150,
   },
   alien: {
     gridRows: 5,
