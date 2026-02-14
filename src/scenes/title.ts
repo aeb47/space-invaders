@@ -28,7 +28,9 @@ export class TitleScene extends ex.Scene {
     if (this.promptLabel) {
       this.promptLabel.graphics.opacity = 1;
     }
-    // Refresh high score (may have changed after a game)
+    // Refresh scores from server (async, updates cache in background)
+    this.highScoreService.refreshScores();
+    // Refresh high score display (may have changed after a game)
     if (this.hiScoreLabel) {
       const scores = this.highScoreService.getScores();
       this.hiScoreLabel.text = scores.length > 0
