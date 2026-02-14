@@ -1,6 +1,6 @@
 import * as ex from 'excalibur';
-import { AlienCollisionGroup } from '../collision-groups';
 import { CONFIG } from '../config';
+import { AlienGroup } from '../collision-groups';
 import { getSpriteSheet, SpriteIndex } from '../resources';
 
 export type AlienType = 'squid' | 'crab' | 'octopus';
@@ -22,7 +22,7 @@ export class Alien extends ex.Actor {
       width: 24,
       height: 16,
       collisionType: ex.CollisionType.Passive,
-      collisionGroup: AlienCollisionGroup,
+      collisionGroup: AlienGroup,
     });
     this.alienType = alienType;
     this.points = CONFIG.points[alienType];

@@ -81,7 +81,7 @@ export class GameScene extends ex.Scene {
     // Wire up collision: player bullet hits alien
     this.alienGrid.aliens.forEach(alien => {
       alien.on('collisionstart', (evt: ex.CollisionStartEvent) => {
-        const other = evt.other;
+        const other = evt.other.owner;
         if (other instanceof Bullet && other.owner === 'player') {
           other.kill();
           this.spawnExplosion(alien.pos.clone());
@@ -113,8 +113,9 @@ export class GameScene extends ex.Scene {
   onActivate(): void {
     // Wire player death collision
     this.player.on('collisionstart', (evt: ex.CollisionStartEvent) => {
-      if (evt.other instanceof Bullet && evt.other.owner === 'alien') {
-        evt.other.kill();
+      const otherActor = evt.other.owner;
+      if (otherActor instanceof Bullet && otherActor.owner === 'alien') {
+        otherActor.kill();
         this.playerHit();
       }
     });

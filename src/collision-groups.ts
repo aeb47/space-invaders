@@ -1,11 +1,11 @@
 import { CollisionGroup, CollisionGroupManager } from 'excalibur';
 
-const PlayerGroup = CollisionGroupManager.create('player');
-const AlienGroup = CollisionGroupManager.create('alien');
-const PlayerBulletGroup = CollisionGroupManager.create('playerBullet');
-const AlienBulletGroup = CollisionGroupManager.create('alienBullet');
+// Base groups — assigned to "target" actors
+export const PlayerGroup = CollisionGroupManager.create('player');
+export const AlienGroup = CollisionGroupManager.create('alien');
 
-export const PlayerCollisionGroup = CollisionGroup.collidesWith([AlienBulletGroup]);
-export const AlienCollisionGroup = CollisionGroup.collidesWith([PlayerBulletGroup]);
+// Derived groups — assigned to actors needing filtered collisions
+// Player bullets only collide with aliens (not player, not other bullets)
 export const PlayerBulletCollisionGroup = CollisionGroup.collidesWith([AlienGroup]);
+// Alien bullets only collide with the player (not aliens, not other bullets)
 export const AlienBulletCollisionGroup = CollisionGroup.collidesWith([PlayerGroup]);

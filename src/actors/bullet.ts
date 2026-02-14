@@ -1,6 +1,6 @@
 import * as ex from 'excalibur';
-import { PlayerBulletCollisionGroup, AlienBulletCollisionGroup } from '../collision-groups';
 import { CONFIG } from '../config';
+import { PlayerBulletCollisionGroup, AlienBulletCollisionGroup } from '../collision-groups';
 import { getSpriteSheet, SpriteIndex } from '../resources';
 
 export type BulletOwner = 'player' | 'alien';

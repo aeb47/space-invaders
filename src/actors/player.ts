@@ -1,6 +1,6 @@
 import * as ex from 'excalibur';
 import { CONFIG } from '../config';
-import { PlayerCollisionGroup } from '../collision-groups';
+import { PlayerGroup } from '../collision-groups';
 import { getSpriteSheet, SpriteIndex } from '../resources';
 import { Bullet } from './bullet';
 
@@ -13,7 +13,7 @@ export class Player extends ex.Actor {
       width: 24,
       height: 16,
       collisionType: ex.CollisionType.Passive,
-      collisionGroup: PlayerCollisionGroup,
+      collisionGroup: PlayerGroup,
     });
   }
 
