@@ -5,12 +5,12 @@ const router = Router();
 
 const MAX_SCORES = 5;
 
-router.get('/api/scores', async (_req, res) => {
-  const scores = await getTopScores();
+router.get('/api/scores', (_req, res) => {
+  const scores = getTopScores();
   res.json({ scores });
 });
 
-router.post('/api/scores', async (req, res) => {
+router.post('/api/scores', (req, res) => {
   const { score, initials } = req.body ?? {};
 
   // Validate initials: exactly 3 uppercase letters
@@ -26,7 +26,7 @@ router.post('/api/scores', async (req, res) => {
   }
 
   // Only accept if it qualifies for top 5
-  const current = await getTopScores();
+  const current = getTopScores();
   const qualifies =
     current.length < MAX_SCORES ||
     score > current[current.length - 1].score;
@@ -36,7 +36,7 @@ router.post('/api/scores', async (req, res) => {
     return;
   }
 
-  const scores = await addScore(initials, score);
+  const scores = addScore(initials, score);
   res.json({ success: true, scores });
 });
 
