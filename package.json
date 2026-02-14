@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:server": "tsx watch server.ts",
     "build": "vite build && npx tsc --project tsconfig.server.json",
     "preview": "vite preview",
     "start": "node dist/server.js"
@@ -25,6 +26,7 @@
   },
   "homepage": "https://github.com/aeb47/space-invaders#readme",
   "dependencies": {
+    "@libsql/client": "^0.17.0",
     "excalibur": "^0.32.0",
     "express": "^5.2.1"
   },

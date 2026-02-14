@@ -4,4 +4,9 @@ export default defineConfig({
   build: {
     outDir: 'dist/public',
   },
+  server: {
+    proxy: {
+      '/api': 'http://localhost:3000',
+    },
+  },
 });

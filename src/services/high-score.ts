@@ -8,6 +8,7 @@ export interface ScoreEntry {
 
 export class HighScoreService {
   private static instance: HighScoreService;
+  private cache: ScoreEntry[] = [];
 
   static getInstance(): HighScoreService {
     if (!HighScoreService.instance) {
@@ -16,9 +17,55 @@ export class HighScoreService {
     return HighScoreService.instance;
   }
 
-  private constructor() {}
+  private constructor() {
+    // Seed cache from localStorage (instant, synchronous)
+    this.cache = this.loadFromStorage();
+    // Then refresh from server in background
+    this.fetchFromServer();
+  }
 
   getScores(): ScoreEntry[] {
+    return [...this.cache];
+  }
+
+  getHighScore(): number {
+    return this.cache.length > 0 ? this.cache[0].score : 0;
+  }
+
+  isHighScore(score: number): boolean {
+    if (score <= 0) return false;
+    return this.cache.length < MAX_SCORES || score > this.cache[this.cache.length - 1].score;
+  }
+
+  addScore(score: number, initials: string = 'AAA'): boolean {
+    const qualifies =
+      this.cache.length < MAX_SCORES ||
+      score > this.cache[this.cache.length - 1].score;
+
+    if (!qualifies) return false;
+
+    // Update cache immediately (synchronous)
+    this.cache.push({ score, initials });
+    this.cache.sort((a, b) => b.score - a.score);
+    this.cache = this.cache.slice(0, MAX_SCORES);
+
+    // Persist to localStorage as offline backup
+    this.saveToStorage();
+
+    // Fire-and-forget POST to server
+    this.postToServer(score, initials);
+
+    return true;
+  }
+
+  /** Refresh cache from server. Call when title screen activates. */
+  refreshScores(): void {
+    this.fetchFromServer();
+  }
+
+  // ---- Private helpers ----
+
+  private loadFromStorage(): ScoreEntry[] {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return [];
@@ -31,35 +78,47 @@ export class HighScoreService {
     }
   }
 
-  getHighScore(): number {
-    const scores = this.getScores();
-    return scores.length > 0 ? scores[0].score : 0;
-  }
-
-  isHighScore(score: number): boolean {
-    if (score <= 0) return false;
-    const scores = this.getScores();
-    return scores.length < MAX_SCORES || score > scores[scores.length - 1].score;
-  }
-
-  addScore(score: number, initials: string = 'AAA'): boolean {
-    const scores = this.getScores();
-    const qualifies =
-      scores.length < MAX_SCORES ||
-      score > scores[scores.length - 1].score;
-
-    if (!qualifies) return false;
-
-    scores.push({ score, initials });
-    scores.sort((a, b) => b.score - a.score);
-    const top = scores.slice(0, MAX_SCORES);
-
+  private saveToStorage(): void {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(top));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.cache));
     } catch {
       // localStorage may be unavailable; silently ignore
     }
+  }
 
-    return true;
+  private async fetchFromServer(): Promise<void> {
+    try {
+      const res = await fetch('/api/scores');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data.scores)) {
+        this.cache = (data.scores as ScoreEntry[])
+          .sort((a, b) => b.score - a.score)
+          .slice(0, MAX_SCORES);
+        this.saveToStorage();
+      }
+    } catch {
+      // Server unreachable — keep using cached/localStorage data
+    }
+  }
+
+  private async postToServer(score: number, initials: string): Promise<void> {
+    try {
+      const res = await fetch('/api/scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ score, initials }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.scores && Array.isArray(data.scores)) {
+        this.cache = (data.scores as ScoreEntry[])
+          .sort((a, b) => b.score - a.score)
+          .slice(0, MAX_SCORES);
+        this.saveToStorage();
+      }
+    } catch {
+      // Server unreachable — score is already in cache and localStorage
+    }
   }
 }
