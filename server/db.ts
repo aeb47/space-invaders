@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import fs from 'fs';
 import path from 'path';
 
 let db: Database.Database;
@@ -6,6 +7,7 @@ let db: Database.Database;
 export function getDb(dbPath?: string): Database.Database {
   if (!db) {
     const resolvedPath = dbPath || path.join(process.cwd(), 'data', 'scores.db');
+    fs.mkdirSync(path.dirname(resolvedPath), { recursive: true });
     db = new Database(resolvedPath);
     db.pragma('journal_mode = WAL');
     initSchema(db);
@@ -33,6 +35,10 @@ export function initSchema(database: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_scores_daily ON scores(daily_seed, score DESC);
     CREATE INDEX IF NOT EXISTS idx_scores_created ON scores(created_at);
   `);
+}
+
+export async function initDb(): Promise<void> {
+  getDb();
 }
 
 export function closeDb(): void {
