@@ -18,6 +18,7 @@ export class TitleScene extends ex.Scene {
     this.setupTitle();
     this.setupPointsTable();
     this.setupMarchingAliens(engine);
+    this.setupModeSelect();
     this.setupPrompt();
     this.setupHiScore();
   }
@@ -39,7 +40,21 @@ export class TitleScene extends ex.Scene {
     }
   }
 
+  private selectedMode: number = 0;
+  private modes = ['STANDARD', 'ENDLESS', 'TIME ATTACK'];
+  private modeLabel!: ex.Label;
+
   onPreUpdate(engine: ex.Engine, _delta: number): void {
+    // Mode selection with up/down
+    if (engine.input.keyboard.wasPressed(ex.Keys.Up) || engine.input.keyboard.wasPressed(ex.Keys.W)) {
+      this.selectedMode = (this.selectedMode - 1 + this.modes.length) % this.modes.length;
+      this.updateModeLabel();
+    }
+    if (engine.input.keyboard.wasPressed(ex.Keys.Down) || engine.input.keyboard.wasPressed(ex.Keys.S)) {
+      this.selectedMode = (this.selectedMode + 1) % this.modes.length;
+      this.updateModeLabel();
+    }
+
     if (engine.input.keyboard.wasPressed(ex.Keys.Enter)) {
       this.startGame(engine);
       return;
@@ -50,8 +65,17 @@ export class TitleScene extends ex.Scene {
     }
   }
 
+  private updateModeLabel(): void {
+    if (!this.modeLabel) return;
+    const display = this.modes.map((m, i) =>
+      i === this.selectedMode ? `> ${m} <` : `  ${m}  `
+    ).join('\n');
+    this.modeLabel.text = display;
+  }
+
   private startGame(engine: ex.Engine): void {
     audio.resume();
+    const mode = this.modes[this.selectedMode].toLowerCase().replace(' ', '-');
     engine.goToScene('game');
   }
 
@@ -203,6 +227,24 @@ export class TitleScene extends ex.Scene {
     });
     this.add(frameToggle);
     frameToggle.start();
+  }
+
+  // ---- Mode Select ----
+
+  private setupModeSelect(): void {
+    this.modeLabel = new ex.Label({
+      text: '',
+      pos: ex.vec(CX, 390),
+      font: new ex.Font({
+        family: 'monospace',
+        size: 14,
+        unit: ex.FontUnit.Px,
+        color: ex.Color.fromHex('#00ffff'),
+        textAlign: ex.TextAlign.Center,
+      }),
+    });
+    this.add(this.modeLabel);
+    this.updateModeLabel();
   }
 
   // ---- Blinking Prompt ----

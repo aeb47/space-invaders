@@ -1,66 +1,51 @@
-import { createClient, Client } from '@libsql/client';
-import fs from 'fs';
+import Database from 'better-sqlite3';
 import path from 'path';
 
-let client: Client;
+let db: Database.Database;
 
-export async function initDb(): Promise<void> {
-  const url = process.env.LIBSQL_URL || 'file:./data/scores.db';
-
-  // For local file URLs, ensure the directory exists
-  if (url.startsWith('file:')) {
-    const filePath = url.replace('file:', '');
-    const dir = path.dirname(filePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
+export function getDb(dbPath?: string): Database.Database {
+  if (!db) {
+    const resolvedPath = dbPath || path.join(process.cwd(), 'data', 'scores.db');
+    db = new Database(resolvedPath);
+    db.pragma('journal_mode = WAL');
+    initSchema(db);
   }
+  return db;
+}
 
-  client = createClient({
-    url,
-    authToken: process.env.LIBSQL_AUTH_TOKEN,
-  });
+export function initSchema(database: Database.Database): void {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS scores (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      initials TEXT NOT NULL,
+      score INTEGER NOT NULL,
+      wave INTEGER NOT NULL,
+      mode TEXT NOT NULL DEFAULT 'standard',
+      difficulty TEXT NOT NULL DEFAULT 'veteran',
+      ship TEXT NOT NULL DEFAULT 'classic',
+      accuracy REAL,
+      daily_seed TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      ip_hash TEXT
+    );
 
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS high_scores (
-      id         INTEGER PRIMARY KEY AUTOINCREMENT,
-      initials   TEXT    NOT NULL CHECK(length(initials) = 3),
-      score      INTEGER NOT NULL CHECK(score > 0),
-      created_at TEXT    NOT NULL DEFAULT (datetime('now'))
-    )
+    CREATE INDEX IF NOT EXISTS idx_scores_mode_score ON scores(mode, score DESC);
+    CREATE INDEX IF NOT EXISTS idx_scores_daily ON scores(daily_seed, score DESC);
+    CREATE INDEX IF NOT EXISTS idx_scores_created ON scores(created_at);
   `);
-
-  await client.execute(
-    `CREATE INDEX IF NOT EXISTS idx_high_scores_score ON high_scores(score DESC)`
-  );
-}
-
-export interface ScoreRow {
-  initials: string;
-  score: number;
-}
-
-const MAX_SCORES = 5;
-
-export async function getTopScores(): Promise<ScoreRow[]> {
-  const result = await client.execute({
-    sql: 'SELECT initials, score FROM high_scores ORDER BY score DESC LIMIT ?',
-    args: [MAX_SCORES],
-  });
-  return result.rows.map((row) => ({
-    initials: row.initials as string,
-    score: row.score as number,
-  }));
-}
-
-export async function addScore(initials: string, score: number): Promise<ScoreRow[]> {
-  await client.execute({
-    sql: 'INSERT INTO high_scores (initials, score) VALUES (?, ?)',
-    args: [initials, score],
-  });
-  return getTopScores();
 }
 
 export function closeDb(): void {
-  client.close();
+  if (db) {
+    db.close();
+    db = undefined as unknown as Database.Database;
+  }
+}
+
+// For testing: create an in-memory database
+export function createTestDb(): Database.Database {
+  const testDb = new Database(':memory:');
+  testDb.pragma('journal_mode = WAL');
+  initSchema(testDb);
+  return testDb;
 }

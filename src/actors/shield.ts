@@ -1,8 +1,12 @@
 import * as ex from 'excalibur';
 import { CONFIG } from '../config';
 import { ShieldGroup } from '../collision-groups';
+import { getShieldColor, getShieldOpacity, getShieldDrawSize } from './shield-helpers';
 
 export class ShieldBlock extends ex.Actor {
+  public hp: number;
+  private maxHp: number;
+
   constructor(pos: ex.Vector) {
     const size = CONFIG.shield.blockSize;
     super({
@@ -12,16 +16,39 @@ export class ShieldBlock extends ex.Actor {
       collisionType: ex.CollisionType.Passive,
       collisionGroup: ShieldGroup,
     });
+    this.maxHp = CONFIG.shield.blockHp;
+    this.hp = this.maxHp;
   }
 
   onInitialize(): void {
-    const size = CONFIG.shield.blockSize;
+    this.updateVisual();
+  }
+
+  hit(): boolean {
+    this.hp--;
+    if (this.hp <= 0) {
+      // TODO: debris particles (F2.4)
+      this.kill();
+      return false;
+    }
+    // TODO: crumble sound placeholder (F2.3)
+    this.updateVisual();
+    return true;
+  }
+
+  private updateVisual(): void {
+    const blockSize = CONFIG.shield.blockSize;
+    const drawSize = getShieldDrawSize(this.hp, this.maxHp, blockSize);
+    const color = getShieldColor(this.hp, this.maxHp);
+    const opacity = getShieldOpacity(this.hp, this.maxHp);
+
     const rect = new ex.Rectangle({
-      width: size,
-      height: size,
-      color: ex.Color.fromHex('#00ff00'),
+      width: drawSize,
+      height: drawSize,
+      color: ex.Color.fromHex(color),
     });
     this.graphics.use(rect);
+    this.graphics.opacity = opacity;
   }
 }
 
