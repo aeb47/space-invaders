@@ -3,3 +3,6 @@ dist/
 .worktrees
 data/
 *.db
+.playwright-mcp
+.playwright-test-images
+.vite
