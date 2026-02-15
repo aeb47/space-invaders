@@ -32,7 +32,7 @@ initDb().then(() => {
 
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
-}).catch((err) => {
+}).catch((err: unknown) => {
   console.error('Failed to initialize database:', err);
   process.exit(1);
 });
